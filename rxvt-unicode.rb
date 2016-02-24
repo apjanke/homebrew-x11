@@ -3,7 +3,7 @@ class RxvtUnicode < Formula
   homepage "http://software.schmorp.de/pkg/rxvt-unicode.html"
   url "http://dist.schmorp.de/rxvt-unicode/rxvt-unicode-9.22.tar.bz2"
   sha256 "e94628e9bcfa0adb1115d83649f898d6edb4baced44f5d5b769c2eeb8b95addd"
-  revision 1
+  revision 2
 
   bottle do
     cellar :any_skip_relocation
@@ -46,6 +46,12 @@ class RxvtUnicode < Formula
 
     system "./configure", *args
     system "make", "install"
+
+    # urxvt compiles its terminfo to ~/.terminfo, which gets lost in the sandbox
+    system "/usr/bin/tic", "-x", "-o", "#{share}/terminfo",
+      "doc/etc/rxvt-unicode.terminfo"
+    chmod 0644, "doc/etc/rxvt-unicode.terminfo"
+    (pkgshare/"terminfo/src").install "doc/etc/rxvt-unicode.terminfo"
   end
 
   test do
