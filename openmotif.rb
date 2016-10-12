@@ -1,13 +1,14 @@
 class Openmotif < Formula
   desc "LGPL release of the Motif toolkit"
   homepage "https://motif.ics.com/motif"
-  url "https://downloads.sourceforge.net/project/motif/Motif%202.3.6%20Source%20Code/motif-2.3.6.tar.gz"
-  sha256 "fa810e6bedeca0f5a2eb8216f42129bcf6bd23919068d433e386b7bfc05d58cf"
+  url "https://downloads.sourceforge.net/project/motif/Motif%202.3.4%20Source%20Code/motif-2.3.4-src.tgz"
+  sha256 "637efa09608e0b8f93465dbeb7c92e58ebb14c4bc1b488040eb79a65af3efbe0"
 
   bottle do
-    sha256 "9c90a53591bfe54c2c336c08795aeeb6182b804cbb5db293e8a6268c1d321535" => :sierra
-    sha256 "a08b6eb674784b04b034658bf078b31cb2a2145256ccf9508c4fcf1e1bfd5124" => :el_capitan
-    sha256 "b0158bbe9af692f60dda0c764d1c32da0c57640fc77be2fe37f4657c0ff2030d" => :yosemite
+    revision 2
+    sha256 "a7306b58b4f448614f89ede7bbf21e6d9f8618268ff99d039ecfc0473b29e3f3" => :el_capitan
+    sha256 "b858f095abc5fce79c4f32070465973e72418b3a5eda9e66ea76b3cb019621ea" => :yosemite
+    sha256 "3a8210579e8fc6412c46e4ab91b910ea0de83d19265047729ed6115062b04479" => :mavericks
   end
 
   option :universal
@@ -17,7 +18,6 @@ class Openmotif < Formula
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
   depends_on "fontconfig"
-  depends_on "freetype"
   depends_on "jpeg" => :optional
   depends_on "libpng" => :optional
   depends_on :x11
@@ -33,11 +33,12 @@ class Openmotif < Formula
   # From https://trac.macports.org/browser/trunk/dports/x11/openmotif/files/patch-configure.ac.diff
   # "Only weak aliases are supported on darwin"
   # Adapted from https://trac.macports.org/browser/trunk/dports/x11/openmotif/files/patch-lib-XmP.h.diff
-  # Fixes "malloc.h not found" (reported upstream via email)
   patch :DATA
 
   def install
     ENV.universal_binary if build.universal?
+
+    inreplace "autogen.sh", "libtoolize", "glibtoolize"
 
     # https://trac.macports.org/browser/trunk/dports/x11/openmotif/Portfile#L59
     # Compile breaks if these three files are present.
@@ -54,8 +55,7 @@ class Openmotif < Formula
     args << "--disable-jpeg" if build.without? "jpeg"
     args << "--disable-png" if build.without? "libpng"
 
-    system "./configure", *args
-    system "make"
+    system "./autogen.sh", *args
     system "make", "install"
 
     # Avoid conflict with Perl
@@ -72,7 +72,7 @@ diff --git a/configure.ac b/configure.ac
 index 6db447c..22ea2e9 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -159,9 +159,9 @@ fi
+@@ -164,9 +164,9 @@ fi
  if test x$GCC = xyes
  then
      CFLAGS="$CFLAGS -Wall -g -fno-strict-aliasing -Wno-unused -Wno-comment"
@@ -90,7 +90,7 @@ diff --git a/lib/Xm/XmP.h b/lib/Xm/XmP.h
 index 97c7c71..50b1585 100644
 --- a/lib/Xm/XmP.h
 +++ b/lib/Xm/XmP.h
-@@ -1437,9 +1437,13 @@ extern void _XmDestroyParentCallback(
+@@ -1442,9 +1442,13 @@ extern void _XmDestroyParentCallback(
 
  #endif /* NO_XM_1_2_BC */
 
@@ -106,18 +106,3 @@ index 97c7c71..50b1585 100644
  #else
  #  define XM_DEPRECATED
  #  define XM_ALIAS(sym)
-
-
-diff --git a/demos/programs/workspace/xrmLib.c b/demos/programs/workspace/xrmLib.c
-index e3f56bd..d056e03 100644
---- a/demos/programs/workspace/xrmLib.c
-+++ b/demos/programs/workspace/xrmLib.c
-@@ -30,7 +30,7 @@ static char rcsid[] = "$XConsortium: xrmLib.c /main/6 1995/07/14 10:01:41 drk $"
- #endif
-
- #include <stdio.h>
--#include <malloc.h>
-+#include <stdlib.h>
- #include <Xm/Xm.h>
- #include "wsm.h"
- #include "wsmDebug.h"
